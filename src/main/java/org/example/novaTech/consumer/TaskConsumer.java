@@ -2,9 +2,10 @@ package org.example.novaTech.consumer;
 
 import org.example.novaTech.model.Task;
 import java.util.logging.Logger;
+import org.example.ConcurQueueLab;
 
-class TaskConsumer implements Runnable{
-    private final Logger logger = Logger.getLogger(Consumer.class.getName());
+public class TaskConsumer implements Runnable{
+    private final Logger logger = Logger.getLogger(TaskConsumer.class.getName());
 
     @Override
     public void run() {
