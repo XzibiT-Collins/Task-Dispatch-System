@@ -1,6 +1,8 @@
 package org.example;
 
 import org.example.novaTech.model.Task;
+import org.example.novaTech.producer.TaskProducer;
+import org.example.novaTech.consumer.TaskConsumer;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
@@ -8,13 +10,13 @@ import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class ConcurQueueLab{
-    static final int numberOfTasks = 50;
-    static BlockingQueue<Task> taskQueue = new PriorityBlockingQueue<>(100);
+    public static final int numberOfTasks = 50;
+    public static BlockingQueue<Task> taskQueue = new PriorityBlockingQueue<>(100);
 
     public static void main(String[] args) throws InterruptedException {
 
         for(int i = 0; i<3; i++){
-            new Thread(new Producer()).start();
+            new Thread(new TaskProducer()).start();
             //sleep for .5 seconds
 //            Thread.sleep(500);
         }
@@ -29,7 +31,7 @@ public class ConcurQueueLab{
         monitorLogger.start();
 
         for(int i = 0; i<600; i++){
-            consumerPool.execute(new Consumer());
+            consumerPool.execute(new TaskConsumer());
 
             //sleep consumer for 2 seconds
 //            Thread.sleep(2000);
