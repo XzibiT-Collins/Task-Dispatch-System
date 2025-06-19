@@ -1,6 +1,8 @@
 package org.example;
 
 import org.example.novaTech.model.Task;
+import org.example.novaTech.producer.TaskProducer;
+import org.example.novaTech.consumer.TaskConsumer;
 
 import java.util.UUID;
 import java.util.concurrent.*;
