@@ -13,7 +13,7 @@ public class TaskProducer implements Runnable{
 
     @Override
     public void run() {
-        for(int k=1; k<5; k++) {
+        for(int k=1; k<3; k++) {
             for (int i = 1; i < ConcurQueueLab.numberOfTasks; i++) {
 
                 logger.info(Thread.currentThread().getName() + ": creating task " + i);
@@ -22,21 +22,31 @@ public class TaskProducer implements Runnable{
                         .name("Task "+ (int) (Math.random()*10)+1)
                         .priority((int) (Math.random()*10)+1)
                         .createdTimestamp(Instant.now())
+                        .status(TaskStatusEnum.SUBMITTED)
                         .payload("Payload "+ i+k)
                         .build();
+
+                // Put the task in statusHashMap
+                ConcurQueueLab.taskMap.put(task.getId(), task.getStatus());
+
+                // Increment created task counter
+                ConcurQueueLab.taskCreatedCount.incrementAndGet();
+
                 try {
                     ConcurQueueLab.taskQueue.put(task);
+                    logger.fine(Thread.currentThread().getName() + ": queued task " + task.getName());
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    Thread.currentThread().interrupt();
+                    break;
                 }
             }
-            //delay thread
             try {
                 Thread.sleep(500);
-                System.out.println();
             } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                Thread.currentThread().interrupt();
+                break;
             }
         }
+        logger.info(Thread.currentThread().getName() + ": Producer finished");
     }
 }
