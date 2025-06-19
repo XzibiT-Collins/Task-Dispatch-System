@@ -53,16 +53,16 @@ public class ConcurQueueLab{
             consumerPool.execute(new TaskConsumer());
         }
 
-        // Wait a bit for processing to start
-        Thread.sleep(7000); // Allow time for processing
+        // Allow time for task processing
+        Thread.sleep(7000);
 
-        // FIXED: Use awaitTermination instead of wait
+        // shutdown consumer pool
         consumerPool.shutdown();
         boolean terminated = consumerPool.awaitTermination(30, TimeUnit.SECONDS);
 
         if (!terminated) {
             System.err.println("Consumer pool did not terminate within timeout, forcing shutdown...");
-            consumerPool.shutdownNow();
+            consumerPool.shutdownNow(); //Terminates all actively executing tasks
         }
 
         // Final summary
