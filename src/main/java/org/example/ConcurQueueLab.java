@@ -8,6 +8,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
+import org.example.novaTech.threadMonitor.ThreadMonitoringLogger;
 
 public class ConcurQueueLab{
     public static final int numberOfTasks = 50;
@@ -27,7 +28,7 @@ public class ConcurQueueLab{
         //for metrics
         ThreadPoolExecutor consumerPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 
-        Thread monitorLogger = new Thread(new MonitorLogger(consumerPool));
+        Thread monitorLogger = new Thread(new ThreadMonitoringLogger(consumerPool));
         monitorLogger.start();
 
         for(int i = 0; i<600; i++){
