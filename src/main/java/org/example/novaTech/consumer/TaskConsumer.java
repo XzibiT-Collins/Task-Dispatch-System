@@ -13,57 +13,57 @@ public class TaskConsumer implements Runnable{
     @Override
     public void run() {
         try {
-            Task task = ConcurQueueLab.taskQueue.poll(1, TimeUnit.SECONDS);
+            while (true) {
+                Task task = ConcurQueueLab.taskQueue.poll(1, TimeUnit.SECONDS);
+                if(task == null) {
+                    logger.fine(Thread.currentThread().getName() + ": no task available");
+                    break;
+                }
+                else{
+                    try {
+                        //Throw intentional exception to simulate failure
+                        if (Math.random() > 0.5) {
+                            throw new Exception("Intentional Exception");
+                        }
 
-            if(task != null) {
+                        // Change task status to processing
+                        ConcurQueueLab.taskMap.replace(task.getId(), TaskStatusEnum.PROCESSING);
 
-                try {
-                    //Throw intentional exception to simulate failure
-                    if(Math.random() > 0.5){
-                        throw new Exception("Intentional Exception");
-                    }
+                        logger.info(Thread.currentThread().getName() + ": processing task " + task.getName());
 
-                    // Change task status to processing
-                    ConcurQueueLab.taskMap.replace(task.getId(), TaskStatusEnum.PROCESSING);
+                        // Simulate processing time before marking as processed
+                        Thread.sleep(2000);
 
-                    logger.info(Thread.currentThread().getName() + ": processing task " + task.getName());
+                        // Mark task as processed in the task object
+                        task.setProcessed(true);
 
-                    // Simulate processing time before marking as processed
-                    Thread.sleep(2000);
+                        // Change task status to completed
+                        ConcurQueueLab.taskMap.replace(task.getId(), TaskStatusEnum.COMPLETED);
 
-                    // Mark task as processed in the task object
-                    task.setProcessed(true);
+                        // FIXED: Increment counter ONLY after successful processing
+                        ConcurQueueLab.taskProcessedCount.incrementAndGet();
 
-                    // Change task status to completed
-                    ConcurQueueLab.taskMap.replace(task.getId(), TaskStatusEnum.COMPLETED);
-
-                    // FIXED: Increment counter ONLY after successful processing
-                    ConcurQueueLab.taskProcessedCount.incrementAndGet();
-
-                    logger.info(Thread.currentThread().getName() + ": completed task " + task.getName());
-                }catch (Exception e){
-                    if(task.getRetryCount() < 3){
-                        logger.warning(Thread.currentThread().getName() + ": error processing task - " + e.getMessage());
-                        task.setRetryCount(task.getRetryCount()+1); //increase retry count on task
-                        ConcurQueueLab.taskQueue.put(task); //requeue task
-                    }else{
-                        task.setStatus(TaskStatusEnum.FAILED);
-                        ConcurQueueLab.taskMap.replace(task.getId(), TaskStatusEnum.FAILED);
-                        logger.warning("******************************"+
-                                Thread.currentThread().getName() +
-                                ": Task failed after 3 retry attempts: " +
-                                task.getName() +
-                                "******************************");
+                        logger.info(Thread.currentThread().getName() + ": completed task " + task.getName());
+                    } catch (Exception e) {
+                        if (task.getRetryCount() < 3) {
+                            logger.warning(Thread.currentThread().getName() + ": error processing task - " + e.getMessage());
+                            task.setRetryCount(task.getRetryCount() + 1); //increase retry count on task
+                            ConcurQueueLab.taskQueue.put(task); //requeue task
+                        } else {
+                            task.setStatus(TaskStatusEnum.FAILED);
+                            ConcurQueueLab.taskMap.replace(task.getId(), TaskStatusEnum.FAILED);
+                            logger.warning("******************************" +
+                                    Thread.currentThread().getName() +
+                                    ": Task failed after 3 retry attempts: " +
+                                    task.getName() +
+                                    "******************************");
+                        }
                     }
                 }
-            } else {
-                logger.fine(Thread.currentThread().getName() + ": no task available");
             }
         } catch (InterruptedException e) {
+            logger.info("Consumer thread interrupted");
             Thread.currentThread().interrupt();
-            logger.warning(Thread.currentThread().getName() + ": interrupted while processing task");
-        } catch (Exception e) {
-            logger.severe(Thread.currentThread().getName() + ": error processing task - " + e.getMessage());
         }
     }
 }

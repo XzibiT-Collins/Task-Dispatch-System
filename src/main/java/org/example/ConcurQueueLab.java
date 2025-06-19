@@ -44,9 +44,8 @@ public class ConcurQueueLab{
         // FIXED: Submit only as many consumers as there are tasks
         System.out.println("Submitting consumers for " + taskQueue.size() + " tasks");
 
-        // Submit one consumer per task in queue
-        int tasksToProcess = taskQueue.size();
-        for (int i = 0; i < tasksToProcess; i++) {
+        // submit tasks to the consumer pool with 3 threads
+        for (int i = 0; i < 3; i++) {
             consumerPool.execute(new TaskConsumer());
         }
 
