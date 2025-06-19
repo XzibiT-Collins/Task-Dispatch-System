@@ -3,35 +3,37 @@ package org.example;
 import org.example.novaTech.model.Task;
 import org.example.novaTech.producer.TaskProducer;
 import org.example.novaTech.consumer.TaskConsumer;
+import org.example.novaTech.threadMonitor.ThreadMonitoringLogger;
+import org.example.novaTech.utils.TaskStatusEnum;
 
 import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConcurQueueLab{
-    static final int numberOfTasks = 10;
-    static BlockingQueue<Task> taskQueue = new PriorityBlockingQueue<>(50);
-    static volatile boolean producersFinished = false;
-    static ConcurrentHashMap<UUID, TaskStatusEnum> taskMap = new ConcurrentHashMap<>();
+    public static final int numberOfTasks = 10;
+    public static BlockingQueue<Task> taskQueue = new PriorityBlockingQueue<>(50);
+    public static volatile boolean producersFinished = false;
+    public static ConcurrentHashMap<UUID, TaskStatusEnum> taskMap = new ConcurrentHashMap<>();
 
     // Counter for actually processed tasks
-    static AtomicInteger taskProcessedCount = new AtomicInteger(0);
+    public static AtomicInteger taskProcessedCount = new AtomicInteger(0);
     // Counter for created tasks (for verification)
-    static AtomicInteger taskCreatedCount = new AtomicInteger(0);
+    public static AtomicInteger taskCreatedCount = new AtomicInteger(0);
 
     public static void main(String[] args) throws InterruptedException {
 
         // Start producers
         ExecutorService producerPool = Executors.newFixedThreadPool(3);
         for(int i = 0; i < 3; i++){
-            producerPool.execute(new Producer());
+            producerPool.execute(new TaskProducer());
         }
         producerPool.shutdown();
 
         // Consumer thread pool
         ThreadPoolExecutor consumerPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 
-        Thread monitorLogger = new Thread(new MonitorLogger(consumerPool));
+        Thread monitorLogger = new Thread(new ThreadMonitoringLogger(consumerPool));
         monitorLogger.setDaemon(true);
         monitorLogger.start();
 
@@ -48,7 +50,7 @@ public class ConcurQueueLab{
         // Submit one consumer per task in queue
         int tasksToProcess = taskQueue.size();
         for (int i = 0; i < tasksToProcess; i++) {
-            consumerPool.execute(new SingleTaskConsumer());
+            consumerPool.execute(new TaskConsumer());
         }
 
         // Wait a bit for processing to start

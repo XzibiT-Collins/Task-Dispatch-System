@@ -3,6 +3,8 @@ package org.example.novaTech.producer;
 import lombok.AllArgsConstructor;
 import org.example.novaTech.model.Task;
 import org.example.ConcurQueueLab;
+import org.example.novaTech.utils.TaskStatusEnum;
+
 import java.time.Instant;
 import java.util.UUID;
 import java.util.logging.Logger;
