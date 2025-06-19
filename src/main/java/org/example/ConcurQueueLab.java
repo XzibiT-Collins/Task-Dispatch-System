@@ -76,8 +76,10 @@ public class ConcurQueueLab{
         long submitted = taskMap.values().stream().mapToLong(status -> status == TaskStatusEnum.SUBMITTED ? 1 : 0).sum();
         long processing = taskMap.values().stream().mapToLong(status -> status == TaskStatusEnum.PROCESSING ? 1 : 0).sum();
         long completed = taskMap.values().stream().mapToLong(status -> status == TaskStatusEnum.COMPLETED ? 1 : 0).sum();
+        long failed = taskMap.values().stream().mapToLong(status -> status == TaskStatusEnum.FAILED ? 1 : 0).sum();
 
         System.out.println("Task Status Breakdown:");
+        System.out.println("  FAILED: " + failed);
         System.out.println("  SUBMITTED: " + submitted);
         System.out.println("  PROCESSING: " + processing);
         System.out.println("  COMPLETED: " + completed);
