@@ -5,6 +5,7 @@ import org.example.novaTech.model.Task;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import org.example.ConcurQueueLab;
+import org.example.novaTech.utils.TaskStatusEnum;
 
 public class TaskConsumer implements Runnable{
     private final Logger logger = Logger.getLogger(TaskConsumer.class.getName());
