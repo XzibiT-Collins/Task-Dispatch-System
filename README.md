@@ -28,6 +28,69 @@ A multithreaded Java application demonstrating core **concurrency** concepts inc
 
 ---
 
+```mermaid
+   ---
+title: Concurrent Task Queue Activity Diagram
+---
+
+%% Activity diagram for ConcurQueueLab system
+
+flowchart TD
+
+%% START
+   Start([Start]) --> Init[/"Initialize shared resources:\n - BlockingQueue<Task> (priority queue)\n - task status map\n - counters"/]
+
+   Init -->|Main thread| Producers[/"Start N Producer threads"/]
+   Producers -->|Each producer loops and creates tasks| CreateTask[/"Create Task instance\n - Set id, name, priority, status=SUBMITTED\n - Increment created count"/]
+   CreateTask --> EnqueueTask[/"Put task in BlockingQueue\nAdd status to map"/]
+   EnqueueTask --> ProducerCheck{<i>More tasks to produce?</i>}
+   ProducerCheck -- Yes --> CreateTask
+   ProducerCheck -- No --> EndProducer[/"Producer thread ends"/]
+   EndProducer --> WaitProds[/"Main waits for producers"/]
+
+   WaitProds -->|After starting producers| StartConsumers[/"Start consumer pool (3 threads)"/]
+   StartConsumers --> ForEachConsumer[/"For each consumer"/]
+
+   ForEachConsumer --> ConsumerLoop[/"While true:\n  Poll next task from queue"/]
+   ConsumerLoop -->|Task found| ProcessTask[/"Try processing task"/]
+   ConsumerLoop -->|Queue empty| ConsumerEnd[/"Consumer thread finishes"/]
+   ProcessTask --> RandFail{Random failure?}
+
+   RandFail -- Yes --> RetryCheck{Retry < 3?}
+   RetryCheck -- Yes --> RetryTask[/"Increment retry\nPut back on queue"/]
+   RetryTask --> ConsumerLoop
+   RetryCheck -- No --> FailTask[/"Set status FAILED\nUpdate status map"/]
+FailTask --> ConsumerLoop
+
+RandFail -- No --> MarkProcessing[/"Set status to PROCESSING"/]
+MarkProcessing --> SimulateWork[/"Simulate work (sleep)"/]
+SimulateWork --> CompleteTask[/"Mark task as processed\nSet status COMPLETED\nIncrement processed count"/]
+CompleteTask --> ConsumerLoop
+
+ConsumerEnd --> WaitConsumers[/"Main waits for consumer pool shutdown"/]
+
+WaitConsumers -->|Consumer pool ends| StartMonitor[/"Start Monitor Thread (daemon)"/]
+StartMonitor --> StartExporter[/"Start Scheduled JSON Exporter"/]
+
+StartExporter -.-> MonitorStatus[/"Monitor and Export\nTask statuses periodically"/]
+MonitorStatus -.-> Summary[/"Final summary"/]
+Summary --> End([End])
+
+%% Failure handling
+ProcessTask -.->|Exception| RandFail
+
+%% Styling
+classDef startend fill:#cfc,stroke:#222;
+classDef actions fill:#eee,stroke:#555;
+classDef decisions fill:#fff,stroke:#888,stroke-dasharray: 5 5;
+
+class Start,End startend;
+class Init,WaitProds,WaitConsumers,StartMonitor,StartExporter,MonitorStatus,Summary actions;
+class ProducerCheck,RandFail,RetryCheck decisions;
+
+```
+
+
 ## 🗂️ Project Structure
 
 ```
