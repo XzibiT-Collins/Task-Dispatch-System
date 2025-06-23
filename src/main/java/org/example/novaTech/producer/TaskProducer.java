@@ -7,16 +7,29 @@ import org.example.novaTech.utils.TaskStatusEnum;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
-@AllArgsConstructor
 public class TaskProducer implements Runnable{
     private final Logger logger = Logger.getLogger(TaskProducer.class.getName());
+    private final ConcurrentHashMap<UUID, TaskStatusEnum> taskMap;
+    private final BlockingQueue<Task> taskQueue;
+    private final int numberOfTasks;
+    private final AtomicInteger taskCreatedCount;
+
+    public TaskProducer(ConcurrentHashMap<UUID, TaskStatusEnum> taskMap, BlockingQueue<Task> taskQueue, int numberOfTasks, AtomicInteger taskCreatedCount) {
+        this.taskMap = taskMap;
+        this.taskQueue = taskQueue;
+        this.numberOfTasks = numberOfTasks;
+        this.taskCreatedCount = taskCreatedCount;
+    }
 
     @Override
     public void run() {
         for(int k=1; k<3; k++) {
-            for (int i = 1; i < ConcurQueueLab.numberOfTasks; i++) {
+            for (int i = 1; i < numberOfTasks; i++) {
 
                 logger.info(Thread.currentThread().getName() + ": creating task " + i);
                 Task task = Task.builder()
@@ -29,13 +42,13 @@ public class TaskProducer implements Runnable{
                         .build();
 
                 // Put the task in statusHashMap
-                ConcurQueueLab.taskMap.put(task.getId(), task.getStatus());
+                taskMap.put(task.getId(), task.getStatus());
 
                 // Increment created task counter
-                ConcurQueueLab.taskCreatedCount.incrementAndGet();
+                taskCreatedCount.incrementAndGet();
 
                 try {
-                    ConcurQueueLab.taskQueue.put(task);
+                    taskQueue.put(task);
                     logger.fine(Thread.currentThread().getName() + ": queued task " + task.getName());
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();

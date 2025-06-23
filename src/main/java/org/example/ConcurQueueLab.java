@@ -14,17 +14,17 @@ import java.util.logging.Logger;
 
 public class ConcurQueueLab{
     private final static Logger logger = Logger.getLogger(ConcurQueueLab.class.getName());
-    public static final int numberOfTasks = 10;
-    public static BlockingQueue<Task> taskQueue = new PriorityBlockingQueue<>(50);
-    public static ConcurrentHashMap<UUID, TaskStatusEnum> taskMap = new ConcurrentHashMap<>();
-    public static AtomicInteger taskProcessedCount = new AtomicInteger(0);
-    public static AtomicInteger taskCreatedCount = new AtomicInteger(0);
+    private static final int numberOfTasks = 10;
+    private static final BlockingQueue<Task> taskQueue = new PriorityBlockingQueue<>(50);
+    private static ConcurrentHashMap<UUID, TaskStatusEnum> taskMap = new ConcurrentHashMap<>();
+    private static AtomicInteger taskProcessedCount = new AtomicInteger(0);
+    private static AtomicInteger taskCreatedCount = new AtomicInteger(0);
 
     public static void main(String[] args) throws InterruptedException {
 
         // Start producers
         for(int i = 0; i < 3; i++){
-            new Thread(new TaskProducer()).start();
+            new Thread(new TaskProducer(taskMap,taskQueue,numberOfTasks,taskCreatedCount)).start();
             Thread.sleep(1000);
         }
 
@@ -33,7 +33,7 @@ public class ConcurQueueLab{
         ThreadPoolExecutor consumerPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 
         //Monitoring Thread
-        Thread monitorLogger = new Thread(new ThreadMonitoringLogger(consumerPool));
+        Thread monitorLogger = new Thread(new ThreadMonitoringLogger(consumerPool,taskQueue,taskMap,taskCreatedCount,taskProcessedCount));
         monitorLogger.setDaemon(true); //allows logger monitor to run in the background
         monitorLogger.start();
 
@@ -46,7 +46,7 @@ public class ConcurQueueLab{
 
         // submit tasks to the consumer pool with 3 threads
         for (int i = 0; i < 3; i++) {
-            consumerPool.execute(new TaskConsumer());
+            consumerPool.execute(new TaskConsumer(taskQueue,taskMap,taskProcessedCount));
         }
 
         // Allow time for task processing
@@ -87,5 +87,16 @@ public class ConcurQueueLab{
         System.out.println("  SUBMITTED: " + submitted);
         System.out.println("  PROCESSING: " + processing);
         System.out.println("  COMPLETED: " + completed);
+
+        //shut down monitor log and scheduled export threads
+        monitorLogger.join();
+        if(monitorLogger.isAlive()){
+            monitorLogger.interrupt();
+        }
+
+        if(!scheduler.isTerminated()){
+            scheduler.shutdown();
+            logger.info("Scheduled task status export thread successfully shut down");
+        }
     }
 }

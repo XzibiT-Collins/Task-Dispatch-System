@@ -15,7 +15,7 @@ public class DeadLockResolved {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    logger.info("Thread One interrupted: "+ e.getMessage());
                 }
 
                 synchronized (resourceTwo) {
@@ -32,7 +32,7 @@ public class DeadLockResolved {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    logger.info("Thread Two interrupted: "+ e.getMessage());
                 }
 
                 synchronized (resourceTwo) {
@@ -49,7 +49,7 @@ public class DeadLockResolved {
             threadOne.join();
             threadTwo.join();
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            logger.info("Unable to join threads: "+ e.getMessage());
         }
     }
 }
