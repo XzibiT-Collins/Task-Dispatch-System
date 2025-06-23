@@ -7,10 +7,12 @@ import org.example.novaTech.consumer.TaskConsumer;
 import org.example.novaTech.threadMonitor.ThreadMonitoringLogger;
 import org.example.novaTech.utils.TaskStatusEnum;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class ConcurQueueLab{
     private final static Logger logger = Logger.getLogger(ConcurQueueLab.class.getName());
@@ -70,11 +72,10 @@ public class ConcurQueueLab{
 
         // Final summary
         // Status breakdown
-        long submitted = taskMap.values().stream().mapToLong(status -> status == TaskStatusEnum.SUBMITTED ? 1 : 0).sum();
-        long processing = taskMap.values().stream().mapToLong(status -> status == TaskStatusEnum.PROCESSING ? 1 : 0).sum();
-        long completed = taskMap.values().stream().mapToLong(status -> status == TaskStatusEnum.COMPLETED ? 1 : 0).sum();
-        long failed = taskMap.values().stream().mapToLong(status -> status == TaskStatusEnum.FAILED ? 1 : 0).sum();
-
+        Map<TaskStatusEnum, Long> statusBreakdown = taskMap.values().stream().collect(Collectors.groupingBy(
+                task-> task,
+                Collectors.counting()
+        ));
 
         //Used standard print statements to make them visible in the console
         System.out.println("\n=== FINAL SUMMARY ===");
@@ -83,10 +84,8 @@ public class ConcurQueueLab{
         System.out.println("ThreadPool Completed Tasks: " + consumerPool.getCompletedTaskCount());
         System.out.println("Tasks Remaining in Queue: " + taskQueue.size());
         System.out.println("Task Status Breakdown:");
-        System.out.println("  FAILED: " + failed);
-        System.out.println("  SUBMITTED: " + submitted);
-        System.out.println("  PROCESSING: " + processing);
-        System.out.println("  COMPLETED: " + completed);
+        statusBreakdown.forEach((status,count) -> System.out.println("  " + status + ": " + count));
+
 
         //shut down monitor log and scheduled export threads
         monitorLogger.join();

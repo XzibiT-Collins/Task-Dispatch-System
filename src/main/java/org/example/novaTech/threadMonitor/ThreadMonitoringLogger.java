@@ -4,12 +4,14 @@ import org.example.ConcurQueueLab;
 import org.example.novaTech.model.Task;
 import org.example.novaTech.utils.TaskStatusEnum;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class ThreadMonitoringLogger implements Runnable{
     private final Logger logger = Logger.getLogger(ThreadMonitoringLogger.class.getName());
@@ -47,17 +49,13 @@ public class ThreadMonitoringLogger implements Runnable{
             ));
 
             // Log task status distribution
-            long submitted = taskMap.values().stream()
-                    .mapToLong(status -> status == TaskStatusEnum.SUBMITTED ? 1 : 0).sum();
-            long processing = taskMap.values().stream()
-                    .mapToLong(status -> status == TaskStatusEnum.PROCESSING ? 1 : 0).sum();
-            long completed = taskMap.values().stream()
-                    .mapToLong(status -> status == TaskStatusEnum.COMPLETED ? 1 : 0).sum();
-
-            logger.info(String.format(
-                    "Status Distribution - SUBMITTED: %d, PROCESSING: %d, COMPLETED: %d",
-                    submitted, processing, completed
+            Map<TaskStatusEnum, Long> statusBreakdown = taskMap.values().stream().collect(Collectors.groupingBy(
+                    task-> task,
+                    Collectors.counting()
             ));
+            StringBuilder logString = new StringBuilder("Task Status Breakdown: \n");
+            statusBreakdown.forEach((status,count) -> logString.append("  ").append(status).append(": ").append(count).append("\n"));
+            logger.info(logString.toString());
 
             try {
                 Thread.sleep(2000);

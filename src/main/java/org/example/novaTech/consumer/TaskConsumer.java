@@ -63,6 +63,7 @@ public class TaskConsumer implements Runnable{
                             logger.warning(Thread.currentThread().getName() + ": error processing task - " + e.getMessage());
                             task.setRetryCount(task.getRetryCount() + 1); //increase retry count on task
                             taskQueue.put(task); //requeue task
+                            task.setStatus(TaskStatusEnum.SUBMITTED);
                         } else {
                             task.setStatus(TaskStatusEnum.FAILED);
                             taskMap.replace(task.getId(), TaskStatusEnum.FAILED);
